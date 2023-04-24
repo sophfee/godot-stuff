@@ -1,7 +1,22 @@
 extends Node3D
 
-@export var AccelerationX: float = 0
-@export var AccelerationY: float = 0
+var AccelerationX: float = 0
+var AccelerationY: float = 0
+
+@export_category("Viewmodel Bobbing")
+@export var BobRight: float = 4;
+@export var BobRightRate: float = 8.4;
+@export var BobUp: float = 2.3;
+@export var BobUpRate: float = 16.8;
+
+@export_category("Viewmodel Sway")
+@export var SwayXMultiplier: float = 0.06;
+@export var SwayXYawMultiplier: float = -.28;
+@export var SwayXRollMultiplier: float = -.28;
+@export var SwayXPositionMultiplier: float = -.02;
+@export var SwayYMultiplier: float = 0.06;
+@export var SwayYPositionMultiplier: float = -.02;
+@export var SwayYPitchMultiplier: float = .20;
 
 var IronsightsTime: float = 0
 
@@ -10,6 +25,7 @@ var Movement: float = 0
 
 @onready var Camera: Camera3D = $"../FirstPersonCamera";
 @onready var Player: CharacterBody3D = get_parent();
+@onready var Model: Node3D = $AK47;
 
 var curtime: float = 0;
 
@@ -20,8 +36,8 @@ func _ready():
 func walk_bob(md: float):
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
-	pos.x += sin(curtime * 8.4) * md;
-	pos.y -= cos(curtime * 16.4) * (md * .4);
+	pos.x += sin(curtime * BobRightRate) * (md * BobRight);
+	pos.y -= cos(curtime * BobUpRate) * (md * BobUp);
 	return pos;
 
 func _input(event):
@@ -42,9 +58,24 @@ func _process(delta: float):
 	Movement = lerpf(Movement, md, delta * 18);
 	var fd: float = Movement;
 	rotation = Camera.rotation
-	rotation += Vector3(AccelerationY * .2, (AccelerationX * -.28), AccelerationX * .2);
-	rotation += Vector3(0, -(rd * .02), -(rd * .5));
-	position = Camera.position + Vector3(0.07, 0, -.002);
-	position -= Axes.up(Camera) * .1
-	position += Vector3(AccelerationX * -.02, 0, (rd * .01));
+	rotation += Vector3(
+		AccelerationY * SwayYPitchMultiplier, 
+		AccelerationX * SwayXYawMultiplier, 
+		AccelerationX * SwayXRollMultiplier
+	);
+	rotation += Vector3(
+		0,
+		-(rd * .02),
+		-(rd * .5)
+	);
+	position = Camera.position + Vector3(0.07, 0, 0);
+	position -= (Camera.transform.basis * Model.position);
+	position -= Axes.up(Camera) * .075
+	position += (
+		Camera.transform.basis * Vector3(
+			AccelerationX * SwayXPositionMultiplier, 
+			AccelerationY * SwayYPositionMultiplier, 
+			(rd * .01)
+		)
+	);
 	position += walk_bob(fd)
