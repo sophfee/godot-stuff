@@ -1,3 +1,10 @@
+# Copyright (c) 2023 - Nick S. - All Rights Reserved.
+# ===================================================
+# This file was shared publicly, please do not remove
+# this credit part.
+# https://github.com/urnotnick/godot-stuff
+# ===================================================
+
 extends Camera3D
 
 @export var Controller: CharacterBody3D
