@@ -25,7 +25,8 @@ var Movement: float = 0
 
 @onready var Camera: Camera3D = $"../FirstPersonCamera";
 @onready var Player: CharacterBody3D = get_parent();
-@onready var Model: Node3D = $AK47;
+
+@onready var Model: Node3D = $weapon_m4a4;
 
 var curtime: float = 0;
 
