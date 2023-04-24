@@ -1,3 +1,4 @@
+class_name ViewModel
 extends Node3D
 
 var AccelerationX: float = 0

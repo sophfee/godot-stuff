@@ -4,7 +4,6 @@ func forward(node: Node3D) -> Vector3:
 	var rot := node.rotation as Vector3;
 	var pitch: float = rot.x;
 	var yaw: float = rot.y;
-	var roll: float = rot.z;
 	var v: Vector3 = Vector3(
 		cos(pitch) * sin(yaw),
 		-sin(pitch),
@@ -14,9 +13,7 @@ func forward(node: Node3D) -> Vector3:
 	
 func right(node: Node3D) -> Vector3:
 	var rot := node.rotation as Vector3;
-	var pitch: float = rot.x;
 	var yaw: float = rot.y;
-	var roll: float = rot.z;
 	var v: Vector3 = Vector3(
 		cos(yaw),
 		0,
