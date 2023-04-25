@@ -38,13 +38,20 @@ var curtime: float = 0;
 func _ready():
 	pass # Replace with function body.
 
-func walk_bob(md: float):
+func walk_bob(md: float) -> Vector3:
 	var a: float = md * lerpf(1, SwayIronsightsMultiplier, IronsightsTime);
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
 	pos.x += sin(curtime * BobRightRate) * (a * BobRight);
 	pos.y -= cos(curtime * BobUpRate) * (a * BobUp);
 	return pos;
+
+var _punch_pos: Vector3 = Vector3(0, 0, 0);
+var _punch_ang: Vector3 = Vector3(0, 0, 0);
+
+func punch(pos: Vector3, ang: Vector3) -> void:
+	_punch_pos += pos;
+	_punch_ang += ang;
 
 func _input(event):
 	if (event is InputEventMouseMotion):
@@ -96,7 +103,9 @@ func _process(delta: float):
 	);
 	
 	position += (Camera.transform.basis * Model.position) * IronsightsTime;
-	position += (Camera.transform.basis * Vector3(-.07,-0.04,.1)) * IronsightsTime;
+	position += (Camera.transform.basis * Vector3(-.071,-0.0295,.1)) * IronsightsTime;
+	position += (Camera.transform.basis * _punch_pos);
+	Camera.fov = lerpf(90, 60, IronsightsTime);
 	#rotation += Vector3(0,0,-2 * IronsightsTime);
 	
 	position += walk_bob(fd)
