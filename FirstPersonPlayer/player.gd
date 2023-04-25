@@ -9,7 +9,6 @@ const ACCELERATION = 10
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var Camera: Camera3D = $FirstPersonCamera;
 
-
 @export var Motion: Vector3;
 
 @export var AbsoluteVelocity:float:

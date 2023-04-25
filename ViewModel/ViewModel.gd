@@ -19,6 +19,9 @@ var AccelerationY: float = 0
 @export var SwayYPositionMultiplier: float = -.02;
 @export var SwayYPitchMultiplier: float = .20;
 
+@export_category("Viewmodel Modifiers")
+@export var SwayIronsightsMultiplier: float = .2;
+
 var IronsightsTime: float = 0
 
 # We store this so we can apply an ever so slight lerp to prevent jitter
@@ -36,10 +39,11 @@ func _ready():
 	pass # Replace with function body.
 
 func walk_bob(md: float):
+	var a: float = md * lerpf(1, SwayIronsightsMultiplier, IronsightsTime);
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
-	pos.x += sin(curtime * BobRightRate) * (md * BobRight);
-	pos.y -= cos(curtime * BobUpRate) * (md * BobUp);
+	pos.x += sin(curtime * BobRightRate) * (a * BobRight);
+	pos.y -= cos(curtime * BobUpRate) * (a * BobUp);
 	return pos;
 
 func _input(event):
@@ -51,33 +55,48 @@ func _input(event):
 func _process(delta: float):
 	curtime += delta;
 	
+	if (Input.is_action_pressed("iron_sights")):
+		IronsightsTime = lerpf(IronsightsTime, 1, delta * 10);
+	else:
+		IronsightsTime = lerpf(IronsightsTime, 0, delta * 10);
+	
 	AccelerationX = lerpf(AccelerationX, 0, delta * 7.5);
 	AccelerationY = lerpf(AccelerationY, 0, delta * 7.5);
 	
+	var isight: float = lerpf(1, SwayIronsightsMultiplier, IronsightsTime);
+	var sway_x: float = AccelerationX * isight;
+	var sway_y: float = AccelerationY * isight;
+	
 	var rightVector := Axes.right(Player) as Vector3;
-	var rd: float = rightVector.dot(Player.velocity.limit_length(6) / 6);
+	var rd: float = rightVector.dot(Player.velocity.limit_length(6) / 6) * isight;
 	var md: float = Player.velocity.limit_length(1).length() * .01;
 	Movement = lerpf(Movement, md, delta * 18);
 	var fd: float = Movement;
 	rotation = Camera.rotation
 	rotation += Vector3(
-		AccelerationY * SwayYPitchMultiplier, 
-		AccelerationX * SwayXYawMultiplier, 
-		AccelerationX * SwayXRollMultiplier
+		sway_y * SwayYPitchMultiplier, 
+		sway_x * SwayXYawMultiplier, 
+		sway_x * SwayXRollMultiplier
 	);
 	rotation += Vector3(
 		0,
 		-(rd * .02),
 		-(rd * .5)
 	);
+	
 	position = Camera.position + Vector3(0.07, 0, 0);
 	position -= (Camera.transform.basis * Model.position);
 	position -= Axes.up(Camera) * .075
 	position += (
 		Camera.transform.basis * Vector3(
-			AccelerationX * SwayXPositionMultiplier, 
-			AccelerationY * SwayYPositionMultiplier, 
+			sway_x * SwayXPositionMultiplier, 
+			sway_y * SwayYPositionMultiplier, 
 			(rd * .01)
 		)
 	);
+	
+	position += (Camera.transform.basis * Model.position) * IronsightsTime;
+	position += (Camera.transform.basis * Vector3(-.07,-0.04,.1)) * IronsightsTime;
+	#rotation += Vector3(0,0,-2 * IronsightsTime);
+	
 	position += walk_bob(fd)
