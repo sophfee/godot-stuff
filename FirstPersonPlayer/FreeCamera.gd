@@ -8,6 +8,7 @@
 extends Camera3D
 
 @export var Controller: CharacterBody3D
+@onready var FootstepStream: AudioStreamPlayer = $AudioStreamPlayer;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -29,12 +30,12 @@ var LastFootStepLeft: bool = false;
 func OnFootstep(Leftfoot: bool, Velocity: float):
 	print("Footstep Velocity: ", Velocity);
 	if (Leftfoot):
-		print("Left foot stepped!")
+		FootstepStream.play();
 	else:
-		print("Right foot stepped!")
+		FootstepStream.play();
 
 func _process(delta:float):
-	if (Controller.AbsoluteVelocity > 0.001):
+	if (abs(Controller.AbsoluteVelocity) > 1):
 		StepTimeUntil += delta
 	
 		if (StepTimeUntil >= StepTime):
