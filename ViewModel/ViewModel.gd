@@ -105,6 +105,9 @@ func _process(delta: float):
 	position += (Camera.transform.basis * Model.position) * IronsightsTime;
 	position += (Camera.transform.basis * Vector3(-.071,-0.0295,.1)) * IronsightsTime;
 	position += (Camera.transform.basis * _punch_pos);
+	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
+	rotation += (Camera.transform.basis * _punch_ang);
+	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
 	Camera.fov = lerpf(90, 60, IronsightsTime);
 	#rotation += Vector3(0,0,-2 * IronsightsTime);
 	
