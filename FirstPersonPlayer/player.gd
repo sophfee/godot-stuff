@@ -9,15 +9,15 @@ const ACCELERATION = 10
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 @onready var Camera: Camera3D = $FirstPersonCamera;
 
-@export var Motion: Vector3;
+var Motion: Vector3;
 
-@export var AbsoluteVelocity:float:
+var AbsoluteVelocity:float:
 	get:
 		return Motion.x + Motion.z
 
 func _process(delta):
 	# Add the gravity.
-	velocity.y -= 400;
+	velocity.y -= 10;
 
 	# Get the input direction and handle the movement/deceleration.
 	# As good practice, you should replace UI actions with custom gameplay actions.
