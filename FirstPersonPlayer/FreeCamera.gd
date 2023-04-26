@@ -7,40 +7,40 @@
 
 extends Camera3D
 
-@export var Controller: CharacterBody3D
-@onready var FootstepStream: AudioStreamPlayer = $AudioStreamPlayer;
+@export var controller: CharacterBody3D
+@onready var footstep_stream: AudioStreamPlayer = $AudioStreamPlayer;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED;
 
 func _input(event):
-	if (Controller == null):
+	if (controller == null):
 		return
 	
 	if (event is InputEventMouseMotion):
-		Controller.rotate_y( -(event.relative.x / 1250) );
+		controller.rotate_y( -(event.relative.x / 1250) );
 		rotate_x( -(event.relative.y / 1250) );
 		
 		
-@export var StepTime: float = .4
-var StepTimeUntil: float = 0
-var LastFootStepLeft: bool = false;
+@export var footstep_interval: float = .4
+var footstep_timer: float = 0
+var footstep_lastfoot: bool = false;
 
-func OnFootstep(Leftfoot: bool, Velocity: float):
+func footstep(Leftfoot: bool, Velocity: float):
 	print("Footstep Velocity: ", Velocity);
 	if (Leftfoot):
-		FootstepStream.play();
+		footstep_stream.play();
 	else:
-		FootstepStream.play();
+		footstep_stream.play();
 
 func _process(delta:float):
-	if (abs(Controller.AbsoluteVelocity) > 1):
-		StepTimeUntil += delta
+	if (abs(controller.lateral_velocity) > 1):
+		footstep_timer += delta
 	
-		if (StepTimeUntil >= StepTime):
-			StepTimeUntil = 0
-			LastFootStepLeft = !LastFootStepLeft;
-			OnFootstep(LastFootStepLeft, Controller.AbsoluteVelocity)
+		if (footstep_timer >= footstep_interval):
+			footstep_timer = 0
+			footstep_lastfoot = !footstep_lastfoot;
+			footstep(footstep_lastfoot, controller.lateral_velocity);
 
 

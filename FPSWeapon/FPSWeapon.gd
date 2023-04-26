@@ -1,22 +1,22 @@
 class_name FPSWeapon
 extends Node3D
 
-var Animator: AnimationPlayer;
-var Camera: Camera3D;
+var animator: AnimationPlayer;
+var camera: Camera3D;
 
 var _releaseSinceLastFire: bool = false;
 var _curdel: float = 0;
 var flash_time: float = 0;
 
 @export_category("Recoil")
-@export var Kick: float = 1.0;
-@export var Skeet: float = 1.0;
-@export var Skew: float = 1.0;
+@export var kick: float = 1.0;
+@export var skeet: float = 1.0;
+@export var skew: float = 1.0;
 
 @export_category("Stats")
-@export var BaseRecoil: float = 0.46;
-@export var RoundsPerMinute: float = 450;
-@export var Automatic: bool = false;
+@export var base_recoil: float = 0.46;
+@export var rounds_per_minute: float = 450;
+@export var automatic: bool = false;
 @onready var view_model: ViewModel = get_parent();
 @onready var fire_sounds: AudioStreamPlayer3D = find_child("FireSounds", true);
 @onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
@@ -24,7 +24,7 @@ var flash_time: float = 0;
 
 var ironsights: bool = false:
 	get:
-		return (VM.IronsightsTime > 0.8);
+		return (view_model.ironsights_alpha > 0.8);
 
 func _ready():
 	pass # Replace with function body.
@@ -35,13 +35,13 @@ func primary_attack() -> void:
 func view_punch(punch: Vector3) -> void:
 	
 	# Ensure we have a camera.
-	assert(Camera != null, "You do not have your Camera identified.");
+	assert(camera != null, "You do not have your camera identified.");
 	
-	Camera.rotation += (Camera.transform.basis * punch);
+	camera.rotation += (camera.transform.basis * punch);
 
 func play_anim(anim_name: String) -> void:
-	assert(Animator != null, "You do not have a linked animator.");
-	Animator.play(anim_name);
+	assert(animator != null, "You do not have a linked animator.");
+	animator.play(anim_name);
 	
 func primary_attack_sound() -> void:
 	assert(fire_sounds != null, "You do not have fire sounds setup with your weapon.");
@@ -54,16 +54,21 @@ func can_primary_attack() -> bool:
 	if (_curdel > 0.001):
 		return false;
 	
-	if (!Automatic && !_releaseSinceLastFire):
+	if (!automatic && !_releaseSinceLastFire):
 		return false;
 	
 	return true;
 
-func fire_bullet(ray_caster: RayCast3D):
+func fire_bullet(ray_caster: RayCast3D) -> void:
+	var hit: bool = ray_caster.get_collider() != null;
+	
+
+func __fire_bullet(ray_caster: RayCast3D):
 	var hit: bool = ray_caster.get_collider() != null;
 	
 	if (hit):
-		var rt: Node = find_parent("Main");
+		
+		var rt: Node = find_parent("BasePlate");
 		assert(rt != null, "Failed to find main.");
 		
 		var bullet_hole: Node3D = bullet_hole_scene.duplicate();
@@ -92,19 +97,19 @@ func _physics_process(delta):
 	var act_just_release: bool = Input.is_action_just_released("prim_attack");
 	
 	
-	if (_curdel == 0 && !Automatic && !_releaseSinceLastFire && (act_just_release || !act_pressed)):
+	if (_curdel == 0 && !automatic && !_releaseSinceLastFire && (act_just_release || !act_pressed)):
 		_releaseSinceLastFire = true;
 	
-	if (Automatic):
+	if (automatic):
 		if (act_pressed):
 			primary_attack();
-			_curdel = (60 / RoundsPerMinute);
+			_curdel = (60 / rounds_per_minute);
 			_releaseSinceLastFire = true;
 	else:
 		if (Input.is_action_just_pressed("prim_attack")):
 			primary_attack();
-			print(60/RoundsPerMinute);
-			_curdel = (60 / RoundsPerMinute);
+			print(60/rounds_per_minute);
+			_curdel = (60 / rounds_per_minute);
 			_releaseSinceLastFire = true;
 
 @warning_ignore("unused_parameter")

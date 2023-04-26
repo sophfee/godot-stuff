@@ -25,12 +25,12 @@ var delta_y: float = 0
 var ironsights_alpha: float = 0
 
 # We store this so we can apply an ever so slight lerp to prevent jitter
-var mv: float = 0 
+var mv: float = 0;
 
-@onready var Camera: Camera3D = $"../FirstPersonCamera";
-@onready var Player: CharacterBody3D = get_parent();
+@onready var camera: Camera3D = $"../FirstPersonCamera";
+@onready var pawn: CharacterBody3D = get_parent();
 
-@onready var Model: Node3D = $weapon_m4a4;
+@onready var view_model: Node3D = $weapon_m4a4;
 
 var curtime: float = 0;
 
@@ -74,12 +74,12 @@ func _process(delta: float):
 	var sway_x: float = delta_x * isight;
 	var sway_y: float = delta_y * isight;
 	
-	var rightVector := Axes.right(Player) as Vector3;
-	var rd: float = rightVector.dot(Player.velocity.limit_length(6) / 6) * isight;
-	var md: float = Player.velocity.limit_length(1).length() * .01;
+	var rightVector := Axes.right(pawn) as Vector3;
+	var rd: float = rightVector.dot(pawn.velocity.limit_length(6) / 6) * isight;
+	var md: float = pawn.velocity.limit_length(1).length() * .01;
 	mv = lerpf(mv, md, delta * 18);
 	var fd: float = mv;
-	rotation = Camera.rotation
+	rotation = camera.rotation
 	rotation += Vector3(
 		sway_y * sway_y_pitch_multiplier, 
 		sway_x * sway_x_yaw_multiplier, 
@@ -91,24 +91,24 @@ func _process(delta: float):
 		-(rd * .5)
 	);
 	
-	position = Camera.position + Vector3(0.07, 0, 0);
-	position -= (Camera.transform.basis * Model.position);
-	position -= Axes.up(Camera) * .075
+	position = camera.position + Vector3(0.07, 0, 0);
+	position -= (camera.transform.basis * view_model.position);
+	position -= Axes.up(camera) * .075
 	position += (
-		Camera.transform.basis * Vector3(
+		camera.transform.basis * Vector3(
 			sway_x * sway_x_position_multiplier, 
 			sway_y * sway_y_position_multiplier, 
 			(rd * .01)
 		)
 	);
 	
-	position += (Camera.transform.basis * Model.position) * ironsights_alpha;
-	position += (Camera.transform.basis * Vector3(-.071,-0.0295,.1)) * ironsights_alpha;
-	position += (Camera.transform.basis * _punch_pos);
+	position += (camera.transform.basis * view_model.position) * ironsights_alpha;
+	position += (camera.transform.basis * Vector3(-.071,-0.0295,.1)) * ironsights_alpha;
+	position += (camera.transform.basis * _punch_pos);
 	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
-	rotation += (Camera.transform.basis * _punch_ang);
+	rotation += (camera.transform.basis * _punch_ang);
 	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
-	Camera.fov = lerpf(90, 60, ironsights_alpha);
+	camera.fov = lerpf(90, 60, ironsights_alpha);
 	#rotation += Vector3(0,0,-2 * ironsights_alpha);
 	
 	position += walk_bob(fd)
