@@ -1,31 +1,31 @@
 class_name ViewModel
 extends Node3D
 
-var AccelerationX: float = 0
-var AccelerationY: float = 0
+var delta_x: float = 0
+var delta_y: float = 0
 
 @export_category("Viewmodel Bobbing")
-@export var BobRight: float = 4;
-@export var BobRightRate: float = 8.4;
-@export var BobUp: float = 2.3;
-@export var BobUpRate: float = 16.8;
+@export var bob_right: float = 4;
+@export var bob_right_rate: float = 8.4;
+@export var bob_up: float = 2.3;
+@export var bob_up_rate: float = 16.8;
 
 @export_category("Viewmodel Sway")
-@export var SwayXMultiplier: float = 0.06;
-@export var SwayXYawMultiplier: float = -.28;
-@export var SwayXRollMultiplier: float = -.28;
-@export var SwayXPositionMultiplier: float = -.02;
-@export var SwayYMultiplier: float = 0.06;
-@export var SwayYPositionMultiplier: float = -.02;
-@export var SwayYPitchMultiplier: float = .20;
+@export var sway_x_multiplier: float = 0.06;
+@export var sway_x_yaw_multiplier: float = -.28;
+@export var sway_x_roll_multiplier: float = -.28;
+@export var sway_x_position_multiplier: float = -.02;
+@export var sway_y_multiplier: float = 0.06;
+@export var sway_y_position_multiplier: float = -.02;
+@export var sway_y_pitch_multiplier: float = .20;
 
 @export_category("Viewmodel Modifiers")
-@export var SwayIronsightsMultiplier: float = .2;
+@export var ironsights_sway_multiplier: float = .2;
 
-var IronsightsTime: float = 0
+var ironsights_alpha: float = 0
 
 # We store this so we can apply an ever so slight lerp to prevent jitter
-var Movement: float = 0 
+var mv: float = 0 
 
 @onready var Camera: Camera3D = $"../FirstPersonCamera";
 @onready var Player: CharacterBody3D = get_parent();
@@ -39,11 +39,11 @@ func _ready():
 	pass # Replace with function body.
 
 func walk_bob(md: float) -> Vector3:
-	var a: float = md * lerpf(1, SwayIronsightsMultiplier, IronsightsTime);
+	var a: float = md * lerpf(1, ironsights_sway_multiplier, ironsights_alpha);
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
-	pos.x += sin(curtime * BobRightRate) * (a * BobRight);
-	pos.y -= cos(curtime * BobUpRate) * (a * BobUp);
+	pos.x += sin(curtime * bob_right_rate) * (a * bob_right);
+	pos.y -= cos(curtime * bob_up_rate) * (a * bob_up);
 	return pos;
 
 var _punch_pos: Vector3 = Vector3(0, 0, 0);
@@ -55,35 +55,35 @@ func punch(pos: Vector3, ang: Vector3) -> void:
 
 func _input(event):
 	if (event is InputEventMouseMotion):
-		AccelerationX += deg_to_rad(event.relative.x * .06);
-		AccelerationY += deg_to_rad(event.relative.y * .06);
+		delta_x += deg_to_rad(event.relative.x * .06);
+		delta_y += deg_to_rad(event.relative.y * .06);
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float):
 	curtime += delta;
 	
 	if (Input.is_action_pressed("iron_sights")):
-		IronsightsTime = lerpf(IronsightsTime, 1, delta * 10);
+		ironsights_alpha = lerpf(ironsights_alpha, 1, delta * 10);
 	else:
-		IronsightsTime = lerpf(IronsightsTime, 0, delta * 10);
+		ironsights_alpha = lerpf(ironsights_alpha, 0, delta * 10);
 	
-	AccelerationX = lerpf(AccelerationX, 0, delta * 7.5);
-	AccelerationY = lerpf(AccelerationY, 0, delta * 7.5);
+	delta_x = lerpf(delta_x, 0, delta * 7.5);
+	delta_y = lerpf(delta_y, 0, delta * 7.5);
 	
-	var isight: float = lerpf(1, SwayIronsightsMultiplier, IronsightsTime);
-	var sway_x: float = AccelerationX * isight;
-	var sway_y: float = AccelerationY * isight;
+	var isight: float = lerpf(1, ironsights_sway_multiplier, ironsights_alpha);
+	var sway_x: float = delta_x * isight;
+	var sway_y: float = delta_y * isight;
 	
 	var rightVector := Axes.right(Player) as Vector3;
 	var rd: float = rightVector.dot(Player.velocity.limit_length(6) / 6) * isight;
 	var md: float = Player.velocity.limit_length(1).length() * .01;
-	Movement = lerpf(Movement, md, delta * 18);
-	var fd: float = Movement;
+	mv = lerpf(mv, md, delta * 18);
+	var fd: float = mv;
 	rotation = Camera.rotation
 	rotation += Vector3(
-		sway_y * SwayYPitchMultiplier, 
-		sway_x * SwayXYawMultiplier, 
-		sway_x * SwayXRollMultiplier
+		sway_y * sway_y_pitch_multiplier, 
+		sway_x * sway_x_yaw_multiplier, 
+		sway_x * sway_x_roll_multiplier
 	);
 	rotation += Vector3(
 		0,
@@ -96,19 +96,19 @@ func _process(delta: float):
 	position -= Axes.up(Camera) * .075
 	position += (
 		Camera.transform.basis * Vector3(
-			sway_x * SwayXPositionMultiplier, 
-			sway_y * SwayYPositionMultiplier, 
+			sway_x * sway_x_position_multiplier, 
+			sway_y * sway_y_position_multiplier, 
 			(rd * .01)
 		)
 	);
 	
-	position += (Camera.transform.basis * Model.position) * IronsightsTime;
-	position += (Camera.transform.basis * Vector3(-.071,-0.0295,.1)) * IronsightsTime;
+	position += (Camera.transform.basis * Model.position) * ironsights_alpha;
+	position += (Camera.transform.basis * Vector3(-.071,-0.0295,.1)) * ironsights_alpha;
 	position += (Camera.transform.basis * _punch_pos);
 	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
 	rotation += (Camera.transform.basis * _punch_ang);
 	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
-	Camera.fov = lerpf(90, 60, IronsightsTime);
-	#rotation += Vector3(0,0,-2 * IronsightsTime);
+	Camera.fov = lerpf(90, 60, ironsights_alpha);
+	#rotation += Vector3(0,0,-2 * ironsights_alpha);
 	
 	position += walk_bob(fd)
