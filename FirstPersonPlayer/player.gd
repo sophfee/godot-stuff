@@ -11,7 +11,7 @@ var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 
 var target_motion: Vector3;
 
-var lateral_velocity:float:
+var lateral_velocity: float:
 	get:
 		return target_motion.x + target_motion.z
 

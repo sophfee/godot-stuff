@@ -1,15 +1,11 @@
 class_name ViewModel
 extends Node3D
 
-var delta_x: float = 0
-var delta_y: float = 0
-
 @export_category("Viewmodel Bobbing")
 @export var bob_right: float = 4;
 @export var bob_right_rate: float = 8.4;
 @export var bob_up: float = 2.3;
 @export var bob_up_rate: float = 16.8;
-
 @export_category("Viewmodel Sway")
 @export var sway_x_multiplier: float = 0.06;
 @export var sway_x_yaw_multiplier: float = -.28;
@@ -18,23 +14,19 @@ var delta_y: float = 0
 @export var sway_y_multiplier: float = 0.06;
 @export var sway_y_position_multiplier: float = -.02;
 @export var sway_y_pitch_multiplier: float = .20;
-
 @export_category("Viewmodel Modifiers")
 @export var ironsights_sway_multiplier: float = .2;
-
-var ironsights_alpha: float = 0
-
-# We store this so we can apply an ever so slight lerp to prevent jitter
-var mv: float = 0;
-
 @onready var camera: Camera3D = $"../FirstPersonCamera";
 @onready var pawn: CharacterBody3D = get_parent();
-
 @onready var view_model: Node3D = $weapon_m4a4;
 
 var curtime: float = 0;
+var ironsights_alpha: float = 0
+var mv: float = 0;
+var xmv: float = 0;
+var delta_x: float = 0
+var delta_y: float = 0
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
 	pass # Replace with function body.
 
@@ -42,8 +34,10 @@ func walk_bob(md: float) -> Vector3:
 	var a: float = md * lerpf(1, ironsights_sway_multiplier, ironsights_alpha);
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
-	pos.x += sin(curtime * bob_right_rate) * (a * bob_right);
-	pos.y -= cos(curtime * bob_up_rate) * (a * bob_up);
+	pos.x += sin(curtime * bob_right_rate) * (a * bob_right) + (a * 1.9);
+	pos.y -= cos(curtime * bob_up_rate) * (a * bob_up) + (a * 1.32);
+	pos.z += a * 6;
+	
 	return pos;
 
 var _punch_pos: Vector3 = Vector3(0, 0, 0);
@@ -58,7 +52,6 @@ func _input(event):
 		delta_x += deg_to_rad(event.relative.x * .06);
 		delta_y += deg_to_rad(event.relative.y * .06);
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float):
 	curtime += delta;
 	

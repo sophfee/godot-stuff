@@ -28,7 +28,6 @@ var footstep_timer: float = 0
 var footstep_lastfoot: bool = false;
 
 func footstep(Leftfoot: bool, Velocity: float):
-	print("Footstep Velocity: ", Velocity);
 	if (Leftfoot):
 		footstep_stream.play();
 	else:

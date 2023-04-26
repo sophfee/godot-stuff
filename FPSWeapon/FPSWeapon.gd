@@ -1,3 +1,9 @@
+# Copyright (c) 2023 - Nick S. - All Rights Reserved.
+# ===================================================
+# This file was shared publicly, please do not remove
+# this credit part.
+# https://github.com/urnotnick/godot-stuff
+# ===================================================
 class_name FPSWeapon
 extends Node3D
 
@@ -14,13 +20,16 @@ var flash_time: float = 0;
 @export var skew: float = 1.0;
 
 @export_category("Stats")
+@export var damage: float = 6.0;
 @export var base_recoil: float = 0.46;
 @export var rounds_per_minute: float = 450;
 @export var automatic: bool = false;
+
 @onready var view_model: ViewModel = get_parent();
 @onready var fire_sounds: AudioStreamPlayer3D = find_child("FireSounds", true);
 @onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
 @onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
+@onready var combat_object: Combat3D = view_model.get_parent_node_3d().find_child("Combat3D");
 
 var ironsights: bool = false:
 	get:
@@ -35,16 +44,16 @@ func primary_attack() -> void:
 func view_punch(punch: Vector3) -> void:
 	
 	# Ensure we have a camera.
-	assert(camera != null, "You do not have your camera identified.");
+	assert(camera, "You do not have your camera identified.");
 	
 	camera.rotation += (camera.transform.basis * punch);
 
 func play_anim(anim_name: String) -> void:
-	assert(animator != null, "You do not have a linked animator.");
+	assert(animator, "You do not have a linked animator.");
 	animator.play(anim_name);
 	
 func primary_attack_sound() -> void:
-	assert(fire_sounds != null, "You do not have fire sounds setup with your weapon.");
+	assert(fire_sounds);
 	fire_sounds.play(0.0);
 	
 var bullet_hole_scene: Node = preload("res://private-shared/cago/decals/BulletHole.tscn").instantiate();
@@ -62,6 +71,22 @@ func can_primary_attack() -> bool:
 func fire_bullet(ray_caster: RayCast3D) -> void:
 	var hit: bool = ray_caster.get_collider() != null;
 	
+	if (hit):
+		print("pee")
+		var obj := ray_caster.get_collider().find_child("Combat3D") as Combat3D;
+		
+		if (obj == null):
+			return;
+		assert(combat_object);
+		
+		
+		obj.inflict_damage(
+			combat_object, 
+			damage, 
+			ray_caster.get_collision_normal(), 
+			(ray_caster.to_global(Vector3.ZERO) - ray_caster.get_collision_point()).normalized() * -.8,
+			ray_caster.get_collision_point() - ray_caster.get_collider().position
+		);
 
 func __fire_bullet(ray_caster: RayCast3D):
 	var hit: bool = ray_caster.get_collider() != null;
@@ -82,7 +107,7 @@ func __fire_bullet(ray_caster: RayCast3D):
 func muzzle_flash() -> void:
 	flash_time = 0.05;
 	muzzle_particle.emit();
-	muzzle_flash_light.visible = true;
+	muzzle_flash_light.visible = false;
 
 func _physics_process(delta):
 	if (flash_time == 0):
