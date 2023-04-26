@@ -42,3 +42,5 @@ func _process(delta:float):
 			StepTimeUntil = 0
 			LastFootStepLeft = !LastFootStepLeft;
 			OnFootstep(LastFootStepLeft, Controller.AbsoluteVelocity)
+
+

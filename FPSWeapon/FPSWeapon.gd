@@ -6,7 +6,7 @@ var Camera: Camera3D;
 
 var _releaseSinceLastFire: bool = false;
 var _curdel: float = 0;
-var _delay: float = 0;
+var flash_time: float = 0;
 
 @export_category("Recoil")
 @export var Kick: float = 1.0;
@@ -19,14 +19,12 @@ var _delay: float = 0;
 @export var Automatic: bool = false;
 @onready var VM: ViewModel = get_parent();
 @onready var fire_sounds: AudioStreamPlayer3D = find_child("FireSounds", true);
-@onready var muzzle_flash_light: SpotLight3D = find_child("MuzzleFlash", true);
+@onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
+@onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
 
 var ironsights: bool = false:
 	get:
 		return (VM.IronsightsTime > 0.8);
-
-func rpm_to_delay(f_rpm: float) -> float:
-	return (f_rpm / 60);
 
 func _ready():
 	pass # Replace with function body.
@@ -41,13 +39,15 @@ func view_punch(punch: Vector3) -> void:
 	
 	Camera.rotation += (Camera.transform.basis * punch);
 
-func play_anim(name: String) -> void:
+func play_anim(anim_name: String) -> void:
 	assert(Animator != null, "You do not have a linked animator.");
-	Animator.play(name);
+	Animator.play(anim_name);
 	
 func primary_attack_sound() -> void:
 	assert(fire_sounds != null, "You do not have fire sounds setup with your weapon.");
 	fire_sounds.play(0.0);
+	
+var bullet_hole_scene: Node = preload("res://private-shared/cago/decals/BulletHole.tscn").instantiate();
 
 func can_primary_attack() -> bool:
 	
@@ -59,11 +59,31 @@ func can_primary_attack() -> bool:
 	
 	return true;
 
-func _physics_process(delta):
-	if (muzzle_flash_light):
-		muzzle_flash_light.visible = false;
+func fire_bullet(ray_caster: RayCast3D):
+	var hit: bool = ray_caster.get_collider() != null;
+	
+	if (hit):
+		var rt: Node = find_parent("Main");
+		assert(rt != null, "Failed to find main.");
+		
+		var bullet_hole: Node3D = bullet_hole_scene.duplicate();
+		assert(bullet_hole != null, "Failed to create bullet hole.");
+		rt.add_child(bullet_hole);
+		
+		bullet_hole.position = ray_caster.get_collision_point();
+		bullet_hole.rotation = ray_caster.get_collision_normal();
+		bullet_hole.rotation += (Axes.up(bullet_hole) * randf_range(0, 90));
 
-func _process(delta):
+func muzzle_flash() -> void:
+	flash_time = 0.05;
+	muzzle_particle.emit();
+	muzzle_flash_light.visible = true;
+
+func _physics_process(delta):
+	if (flash_time == 0):
+		muzzle_flash_light.visible = false;
+	flash_time = move_toward(flash_time, 0, delta);
+	
 	_curdel = move_toward(_curdel, 0, delta);
 	if (!can_primary_attack()):
 		return;
@@ -86,3 +106,7 @@ func _process(delta):
 			print(60/RoundsPerMinute);
 			_curdel = (60 / RoundsPerMinute);
 			_releaseSinceLastFire = true;
+
+@warning_ignore("unused_parameter")
+func _process(delta):
+	pass
