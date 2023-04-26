@@ -7,7 +7,7 @@
 
 extends Camera3D
 
-@export var controller: CharacterBody3D
+@onready var controller: Player = get_parent();
 @onready var footstep_stream: AudioStreamPlayer = $AudioStreamPlayer;
 
 # Called when the node enters the scene tree for the first time.
