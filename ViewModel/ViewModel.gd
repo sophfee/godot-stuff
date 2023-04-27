@@ -66,6 +66,27 @@ func _calculate_ironsights(delta: float) -> void:
 	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
 	camera.fov = lerpf(90, 60, ironsights_alpha);
 
+var _wallproximity: float = 0.0;
+var _against_wall: bool = false;
+func _calculate_wallproximity(delta: float) -> void:
+	var view_port: Viewport = get_viewport();
+	var scr_size: Vector2i = view_port.get_window().size;
+	
+	var hit_pos: Vector3 = camera.project_position(scr_size /2, 4);
+	var dist_sqr: float = position.distance_squared_to(hit_pos);
+	var x: bool = dist_sqr < (5 ^ 2);
+	if (x):
+		_wallproximity = dist_sqr / (5 ^ 2);
+	else:
+		_wallproximity = 0;
+	
+	if (x != _against_wall):
+		print_debug("Against Wall State Change: ", x);
+		_against_wall = x;
+
+func _physics_process(delta):
+	_calculate_wallproximity(delta);
+
 func _process(delta: float):
 	curtime += delta;
 	
@@ -108,6 +129,8 @@ func _process(delta: float):
 			(rd * .01)
 		)
 	);
+	
+	position += (camera.transform.basis * Vector3(0,0,_wallproximity));
 	
 	_calculate_ironsights(delta);
 	#rotation += Vector3(0,0,-2 * ironsights_alpha);
