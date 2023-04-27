@@ -25,6 +25,18 @@ var flash_time: float = 0;
 @export var rounds_per_minute: float = 450;
 @export var automatic: bool = false;
 
+@export_category("Sound")
+@export var primary_fire: AudioStream;
+@export var primary_empty: AudioStream;
+@export var draw: AudioStream;
+@export var holster: AudioStream;
+@export var entering_ironsight: AudioStream;
+@export var exiting_ironsight: AudioStream;
+@export var reload: AudioStream;
+var _sfx_primary_fire: AudioStreamPlayer3D;
+var _sfx_primary_empty: AudioStreamPlayer3D;
+var _sfx_draw: AudioStreamPlayer3D;
+
 @onready var view_model: ViewModel = get_parent();
 @onready var fire_sounds: AudioStreamPlayer3D = find_child("FireSounds", true);
 @onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
@@ -35,8 +47,34 @@ var ironsights: bool = false:
 	get:
 		return (view_model.ironsights_alpha > 0.8);
 
+func _mash(key: String) -> String:
+	return "@" + name + "@@" + String.num(hash(self)) + "@&" + key; 
+
 func _ready():
-	pass # Replace with function body.
+	print("called ready!")
+	# Assertions // Validation
+	assert(primary_fire);
+	assert(primary_empty);
+	assert(view_model);
+	assert(combat_object);
+	assert(muzzle_particle);
+	
+	# Bone Attachment
+	var bone_attach: BoneAttachment3D = find_child("BoneAttachment3D");
+	assert(bone_attach, "You need a BoneAttachment3D connected to your guns muzzle. Keep the name \"BoneAttachment3D\"");
+	
+	# Primary Fire
+	_sfx_primary_fire = AudioStreamPlayer3D.new();
+	_sfx_primary_fire.stream = primary_fire;
+	_sfx_primary_fire.name = _mash("PRIMARYFIRESFX");
+	bone_attach.add_child(_sfx_primary_fire);
+	
+	# Primary Empty
+	_sfx_primary_empty = AudioStreamPlayer3D.new();
+	_sfx_primary_empty.stream = primary_empty;
+	_sfx_primary_empty.name = _mash("PRIMARYEMPTYSFX");
+	bone_attach.add_child(_sfx_primary_empty);
+	
 
 func primary_attack() -> void:
 	pass;
@@ -53,8 +91,9 @@ func play_anim(anim_name: String) -> void:
 	animator.play(anim_name);
 	
 func primary_attack_sound() -> void:
-	assert(fire_sounds);
-	fire_sounds.play(0.0);
+	assert(primary_fire);
+	assert(_sfx_primary_fire);
+	_sfx_primary_fire.play(0.0);
 	
 var bullet_hole_scene: Node = preload("res://private-shared/cago/decals/BulletHole.tscn").instantiate();
 
@@ -72,7 +111,6 @@ func fire_bullet(ray_caster: RayCast3D) -> void:
 	var hit: bool = ray_caster.get_collider() != null;
 	
 	if (hit):
-		print("pee")
 		var obj := ray_caster.get_collider().find_child("Combat3D") as Combat3D;
 		
 		if (obj == null):
@@ -102,7 +140,7 @@ func __fire_bullet(ray_caster: RayCast3D):
 		
 		bullet_hole.position = ray_caster.get_collision_point();
 		bullet_hole.rotation = ray_caster.get_collision_normal();
-		bullet_hole.rotation += (Axes.up(bullet_hole) * randf_range(0, 90));
+		bullet_hole.rotation += (Vector3Extension.up(bullet_hole) * randf_range(0, 90));
 
 func muzzle_flash() -> void:
 	flash_time = 0.05;
