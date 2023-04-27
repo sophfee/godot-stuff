@@ -27,8 +27,8 @@ func _input(event):
 var footstep_timer: float = 0
 var footstep_lastfoot: bool = false;
 
-func footstep(Leftfoot: bool, Velocity: float):
-	if (Leftfoot):
+func footstep(is_left_foot: bool, _character_velocity: float):
+	if (is_left_foot):
 		footstep_stream.play();
 	else:
 		footstep_stream.play();
@@ -41,5 +41,3 @@ func _process(delta:float):
 			footstep_timer = 0
 			footstep_lastfoot = !footstep_lastfoot;
 			footstep(footstep_lastfoot, controller.lateral_velocity);
-
-
