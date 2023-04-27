@@ -17,12 +17,15 @@ var health: float = 100:
 	get:
 		return (_health);
 
+@warning_ignore("unused_parameter")
 func _death(attacker: Combat3D) -> void:
 	pass
 
+@warning_ignore("unused_parameter")
 func _take_damage(attacker: Combat3D, damage: float, normal: Vector3, force: Vector3) -> void:
 	pass;
 
+@warning_ignore("unused_parameter")
 func _scale_damage(attacker: Combat3D, damage: float, normal: Vector3, force: Vector3) -> float:
 	return 1.0;
 
