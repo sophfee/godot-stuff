@@ -143,9 +143,9 @@ func __fire_bullet(ray_caster: RayCast3D):
 		bullet_hole.rotation += (Vector3Extension.up(bullet_hole) * randf_range(0, 90));
 
 func muzzle_flash() -> void:
-	flash_time = 0.05;
+	flash_time = 0.03;
 	muzzle_particle.emit();
-	muzzle_flash_light.visible = false;
+	muzzle_flash_light.visible = true;
 
 func _physics_process(delta):
 	if (flash_time == 0):
