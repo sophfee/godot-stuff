@@ -1,6 +1,11 @@
 class_name ViewModel
 extends Node3D
 
+@export_category("ViewModel Positions")
+@export var ironsights_offset_position: Vector3 = Vector3(0, 0, 0);
+@export var ironsights_offset_rotation: Vector3 = Vector3(0, 0, 0);
+@export var base_offset_position: Vector3 = Vector3(0, 0, 0);
+@export var base_offset_rotation: Vector3 = Vector3(0, 0, 0);
 @export_category("Viewmodel Bobbing")
 @export var bob_right: float = 4;
 @export var bob_right_rate: float = 8.4;
@@ -18,7 +23,7 @@ extends Node3D
 @export var ironsights_sway_multiplier: float = .2;
 @onready var camera: Camera3D = $"../FirstPersonCamera";
 @onready var pawn: CharacterBody3D = get_parent();
-@onready var view_model: Node3D = $weapon_m4a4;
+@onready var view_model: Node3D = get_child(0);
 
 var curtime: float = 0;
 var ironsights_alpha: float = 0
@@ -52,6 +57,15 @@ func _input(event):
 		delta_x += deg_to_rad(event.relative.x * .06);
 		delta_y += deg_to_rad(event.relative.y * .06);
 
+func _calculate_ironsights(delta: float) -> void:
+	position += (camera.transform.basis * view_model.position) * ironsights_alpha;
+	position += (camera.transform.basis * ironsights_offset_position) * ironsights_alpha;
+	position += (camera.transform.basis * _punch_pos);
+	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
+	rotation += (camera.transform.basis * _punch_ang);
+	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
+	camera.fov = lerpf(90, 60, ironsights_alpha);
+
 func _process(delta: float):
 	curtime += delta;
 	
@@ -67,7 +81,7 @@ func _process(delta: float):
 	var sway_x: float = delta_x * isight;
 	var sway_y: float = delta_y * isight;
 	
-	var rightVector := Axes.right(pawn) as Vector3;
+	var rightVector := Vector3Extension.right(pawn) as Vector3;
 	var rd: float = rightVector.dot(pawn.velocity.limit_length(6) / 6) * isight;
 	var md: float = pawn.velocity.limit_length(1).length() * .01;
 	mv = lerpf(mv, md, delta * 18);
@@ -86,7 +100,7 @@ func _process(delta: float):
 	
 	position = camera.position + Vector3(0.07, 0, 0);
 	position -= (camera.transform.basis * view_model.position);
-	position -= Axes.up(camera) * .075
+	position -= Vector3Extension.up(camera) * .075
 	position += (
 		camera.transform.basis * Vector3(
 			sway_x * sway_x_position_multiplier, 
@@ -95,13 +109,7 @@ func _process(delta: float):
 		)
 	);
 	
-	position += (camera.transform.basis * view_model.position) * ironsights_alpha;
-	position += (camera.transform.basis * Vector3(-.071,-0.0295,.1)) * ironsights_alpha;
-	position += (camera.transform.basis * _punch_pos);
-	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
-	rotation += (camera.transform.basis * _punch_ang);
-	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
-	camera.fov = lerpf(90, 60, ironsights_alpha);
+	_calculate_ironsights(delta);
 	#rotation += Vector3(0,0,-2 * ironsights_alpha);
 	
 	position += walk_bob(fd)
