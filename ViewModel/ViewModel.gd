@@ -33,7 +33,7 @@ var delta_x: float = 0
 var delta_y: float = 0
 
 func _ready():
-	pass # Replace with function body.
+	pass
 
 func walk_bob(md: float) -> Vector3:
 	var a: float = md * lerpf(1, ironsights_sway_multiplier, ironsights_alpha);
@@ -63,11 +63,13 @@ func _calculate_ironsights(delta: float) -> void:
 	position += (camera.transform.basis * _punch_pos);
 	_punch_pos = _punch_pos.lerp(Vector3.ZERO, delta * 16);
 	rotation += (camera.transform.basis * _punch_ang);
+	rotation += (camera.transform.basis * ironsights_offset_rotation) * ironsights_alpha;
 	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
 	camera.fov = lerpf(90, 60, ironsights_alpha);
 
 var _wallproximity: float = 0.0;
 var _against_wall: bool = false;
+@warning_ignore("unused_parameter")
 func _calculate_wallproximity(delta: float) -> void:
 	var view_port: Viewport = get_viewport();
 	var scr_size: Vector2i = view_port.get_window().size;
@@ -84,8 +86,9 @@ func _calculate_wallproximity(delta: float) -> void:
 		print_debug("Against Wall State Change: ", x);
 		_against_wall = x;
 
+@warning_ignore("unused_parameter")
 func _physics_process(delta):
-	_calculate_wallproximity(delta);
+	pass #_calculate_wallproximity(delta);
 
 func _process(delta: float):
 	curtime += delta;
@@ -130,7 +133,7 @@ func _process(delta: float):
 		)
 	);
 	
-	position += (camera.transform.basis * Vector3(0,0,_wallproximity));
+	#position += (camera.transform.basis * Vector3(0,0,_wallproximity));
 	
 	_calculate_ironsights(delta);
 	#rotation += Vector3(0,0,-2 * ironsights_alpha);
