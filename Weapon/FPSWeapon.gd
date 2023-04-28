@@ -12,15 +12,18 @@
 class_name FPSWeapon
 extends Node3D
 
-var animator: AnimationPlayer;
-var camera: Camera3D;
-
-var _releaseSinceLastFire: bool = false;
-var _curdel: float = 0;
-var flash_time: float = 0;
-
 @export_category("Weapon")
 @export var weapon: WeaponInfo;
+
+var animator: AnimationPlayer;
+var camera: Camera3D;
+var ironsights: bool = false: get: return get_ironsights();
+var magazine: int = 0;
+var trigger_released: bool = false;
+var current_delay: float = 0;
+var primary_fire_stream: AudioStreamPlayer3D;
+var primary_empty_stream: AudioStreamPlayer3D;
+var draw_stream: AudioStreamPlayer3D;
 
 @onready var damage: float = weapon.damage;
 @onready var base_recoil: float = weapon.recoil_additive;
@@ -38,12 +41,6 @@ var flash_time: float = 0;
 @onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
 @onready var combat_object: Combat3D = get_parent_node_3d();
 
-var _sfx_primary_fire: AudioStreamPlayer3D;
-var _sfx_primary_empty: AudioStreamPlayer3D;
-var _sfx_draw: AudioStreamPlayer3D;
-
-var ironsights: bool = false: get: return get_ironsights();
-
 func get_ironsights() -> bool:
 	return (view_model.ironsights_alpha > 0.8);
 
@@ -51,7 +48,6 @@ func _mash(key: String) -> String:
 	return "@" + name + "@@" + String.num(hash(self)) + "@&" + key; 
 
 func _ready():
-	print("called ready!")
 	# Assertions // Validation
 	assert(primary_fire);
 	assert(primary_empty);
@@ -64,16 +60,16 @@ func _ready():
 	assert(bone_attach, "You need a BoneAttachment3D connected to your guns muzzle. Keep the name \"BoneAttachment3D\"");
 	
 	# Primary Fire
-	_sfx_primary_fire = AudioStreamPlayer3D.new();
-	_sfx_primary_fire.stream = primary_fire;
-	_sfx_primary_fire.name = _mash("PRIMARYFIRESFX");
-	bone_attach.add_child(_sfx_primary_fire);
+	primary_fire_stream = AudioStreamPlayer3D.new();
+	primary_fire_stream.stream = primary_fire;
+	primary_fire_stream.name = _mash("PRIMARYFIRESFX");
+	bone_attach.add_child(primary_fire_stream);
 	
 	# Primary Empty
-	_sfx_primary_empty = AudioStreamPlayer3D.new();
-	_sfx_primary_empty.stream = primary_empty;
-	_sfx_primary_empty.name = _mash("PRIMARYEMPTYSFX");
-	bone_attach.add_child(_sfx_primary_empty);
+	primary_empty_stream = AudioStreamPlayer3D.new();
+	primary_empty_stream.stream = primary_empty;
+	primary_empty_stream.name = _mash("PRIMARYEMPTYSFX");
+	bone_attach.add_child(primary_empty_stream);
 	
 
 func primary_attack() -> void:
@@ -92,17 +88,17 @@ func play_anim(anim_name: String) -> void:
 	
 func primary_attack_sound() -> void:
 	assert(primary_fire);
-	assert(_sfx_primary_fire);
-	_sfx_primary_fire.play(0.0);
+	assert(primary_fire_stream);
+	primary_fire_stream.play(0.0);
 	
 var bullet_hole_scene: Node = preload("res://private-shared/cago/decals/BulletHole.tscn").instantiate();
 
 func can_primary_attack() -> bool:
 	
-	if (_curdel > 0.001):
+	if (current_delay > 0.001):
 		return false;
 	
-	if (!automatic && !_releaseSinceLastFire):
+	if (!automatic && !trigger_released):
 		return false;
 	
 	return true;
@@ -143,38 +139,33 @@ func __fire_bullet(ray_caster: RayCast3D):
 		bullet_hole.rotation += (Vector3Extension.up(bullet_hole) * randf_range(0, 90));
 
 func muzzle_flash() -> void:
-	flash_time = 0.03;
 	muzzle_particle.emit();
-	muzzle_flash_light.visible = true;
 
 func _physics_process(delta):
-	if (flash_time == 0):
-		muzzle_flash_light.visible = false;
-	flash_time = move_toward(flash_time, 0, delta);
-	
-	_curdel = move_toward(_curdel, 0, delta);
+	current_delay = move_toward(current_delay, 0, delta);
 	if (!can_primary_attack()):
 		return;
 	
 	var act_pressed: bool = Input.is_action_pressed("prim_attack");
 	var act_just_release: bool = Input.is_action_just_released("prim_attack");
 	
-	
-	if (_curdel == 0 && !automatic && !_releaseSinceLastFire && (act_just_release || !act_pressed)):
-		_releaseSinceLastFire = true;
+	if (current_delay == 0 && !automatic && !trigger_released && (act_just_release || !act_pressed)):
+		trigger_released = true;
 	
 	if (automatic):
 		if (act_pressed):
 			primary_attack();
-			_curdel = (60 / rounds_per_minute);
-			_releaseSinceLastFire = true;
+			current_delay = (60 / rounds_per_minute);
+			trigger_released = true;
 	else:
 		if (Input.is_action_just_pressed("prim_attack")):
 			primary_attack();
-			print(60/rounds_per_minute);
-			_curdel = (60 / rounds_per_minute);
-			_releaseSinceLastFire = true;
+			current_delay = (60 / rounds_per_minute);
+			trigger_released = true;
 
 @warning_ignore("unused_parameter")
 func _process(delta):
 	pass
+
+func _reload():
+	

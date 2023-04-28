@@ -25,7 +25,10 @@ var footstep_timer: float = 0;
 var footstep_lastfoot: bool = false;
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity");
 var lateral_velocity: float: get: return get_lateral_velocity();
+var ammunition: Dictionary = Dictionary.new();
 var _target_motion: Vector3;
+
+var grounded: bool: get: return is_on_floor();
 
 func _ready():
 	# check
@@ -53,7 +56,7 @@ func _input(event):
 	
 	if (event is InputEventMouseMotion):
 		rotate_y( -(event.relative.x / 1250) );
-		camerarotate_x( -(event.relative.y / 1250) );
+		camera.rotate_x( -(event.relative.y / 1250) );
 
 func footstep(is_left_foot: bool, _character_velocity: float) -> void:
 	if (is_left_foot):
@@ -77,7 +80,25 @@ func _process(delta):
 	
 	velocity = target_motion
 
-	if (!is_on_floor()):
+	if (!grounded):
 		velocity.y -= gravity;
 
 	move_and_slide()
+
+## Add the amount of ammunition to the Player's reserve ammo.
+func give_ammo(ammo: AmmoType, amount: int) -> void:
+	var current: int = ammunition.get(ammo.display_name, null);
+	if (!current):
+		ammunition.set(ammo.display_name, amount);
+	else:
+		ammunition.set(ammo.display_name, current + amount);
+
+func set_ammo(ammo: AmmoType, amount: int) -> void:
+	ammunition.set(ammo.display_name, amount);
+
+func get_ammo(ammo: AmmoType) -> int:
+	var current: int = ammunition.get(ammo, null);
+	if (current):
+		return current;
+	
+	return 0;
