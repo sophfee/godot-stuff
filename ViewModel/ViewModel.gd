@@ -12,28 +12,27 @@
 class_name ViewModel
 extends Node3D
 
-@export_category("ViewModel Positions")
-@export var ironsights_offset_position: Vector3 = Vector3(0, 0, 0);
-@export var ironsights_offset_rotation: Vector3 = Vector3(0, 0, 0);
-@export var base_offset_position: Vector3 = Vector3(0, 0, 0);
-@export var base_offset_rotation: Vector3 = Vector3(0, 0, 0);
-@export_category("Viewmodel Bobbing")
-@export var bob_right: float = 4;
-@export var bob_right_rate: float = 8.4;
-@export var bob_up: float = 2.3;
-@export var bob_up_rate: float = 16.8;
-@export_category("Viewmodel Sway")
-@export var sway_x_multiplier: float = 0.06;
-@export var sway_x_yaw_multiplier: float = -.28;
-@export var sway_x_roll_multiplier: float = -.28;
-@export var sway_x_position_multiplier: float = -.02;
-@export var sway_y_multiplier: float = 0.06;
-@export var sway_y_position_multiplier: float = -.02;
-@export var sway_y_pitch_multiplier: float = .20;
-@export_category("Viewmodel Modifiers")
-@export var ironsights_sway_multiplier: float = .2;
+@export_category("View Model")
+@export var viewmodel: ViewModelSetup;
+
+@onready var ironsights_offset_position: Vector3 = viewmodel.ironsights_offset_position;
+@onready var ironsights_offset_rotation: Vector3 = viewmodel.ironsights_offset_rotation;
+@onready var base_offset_position: Vector3 = viewmodel.base_offset_position;
+@onready var base_offset_rotation: Vector3 = viewmodel.base_offset_rotation;
+@onready var bob_right: float = viewmodel.bob_right;
+@onready var bob_right_rate: float = viewmodel.bob_right_rate;
+@onready var bob_up: float = viewmodel.bob_up;
+@onready var bob_up_rate: float = viewmodel.bob_up_rate;
+@onready var sway_x_multiplier: float = viewmodel.sway_x_multiplier;
+@onready var sway_x_yaw_multiplier: float = viewmodel.sway_x_yaw_multiplier;
+@onready var sway_x_roll_multiplier: float = viewmodel.sway_x_roll_multiplier;
+@onready var sway_x_position_multiplier: float = viewmodel.sway_x_position_multiplier;
+@onready var sway_y_multiplier: float = viewmodel.sway_y_multiplier;
+@onready var sway_y_position_multiplier: float = viewmodel.sway_y_position_multiplier;
+@onready var sway_y_pitch_multiplier: float = viewmodel.sway_y_pitch_multiplier;
+@onready var ironsights_sway_multiplier: float = viewmodel.ironsights_sway_multiplier;
 @onready var camera: Camera3D = $"../FirstPersonCamera";
-@onready var pawn: CharacterBody3D = get_parent();
+@onready var pawn: Player = get_parent();
 @onready var view_model: Node3D = get_child(0);
 
 var curtime: float = 0;

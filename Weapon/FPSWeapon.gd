@@ -19,38 +19,33 @@ var _releaseSinceLastFire: bool = false;
 var _curdel: float = 0;
 var flash_time: float = 0;
 
-@export_category("Recoil")
-@export var kick: float = 1.0;
-@export var skeet: float = 1.0;
-@export var skew: float = 1.0;
+@export_category("Weapon")
+@export var weapon: WeaponInfo;
 
-@export_category("Stats")
-@export var damage: float = 6.0;
-@export var base_recoil: float = 0.46;
-@export var rounds_per_minute: float = 450;
-@export var automatic: bool = false;
+@onready var damage: float = weapon.damage;
+@onready var base_recoil: float = weapon.recoil_additive;
+@onready var rounds_per_minute: float = weapon.rounds_per_minute;
+@onready var automatic: bool = weapon.automatic;
+@onready var primary_fire: AudioStream = weapon.primary_attack;
+@onready var primary_empty: AudioStream = weapon.primary_empty;
+@onready var draw: AudioStream = weapon.draw;
+@onready var holster: AudioStream = weapon.holster;
+@onready var entering_ironsight: AudioStream = weapon.entering_ironsight;
+@onready var exiting_ironsight: AudioStream = weapon.exiting_ironsight;
+@onready var reload: AudioStream = weapon.reload;
+@onready var view_model: ViewModel = weapon.view_model;
+@onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
+@onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
+@onready var combat_object: Combat3D = get_parent_node_3d();
 
-@export_category("Sound")
-@export var primary_fire: AudioStream;
-@export var primary_empty: AudioStream;
-@export var draw: AudioStream;
-@export var holster: AudioStream;
-@export var entering_ironsight: AudioStream;
-@export var exiting_ironsight: AudioStream;
-@export var reload: AudioStream;
 var _sfx_primary_fire: AudioStreamPlayer3D;
 var _sfx_primary_empty: AudioStreamPlayer3D;
 var _sfx_draw: AudioStreamPlayer3D;
 
-@onready var view_model: ViewModel = get_parent();
-@onready var fire_sounds: AudioStreamPlayer3D = find_child("FireSounds", true);
-@onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
-@onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
-@onready var combat_object: Combat3D = view_model.get_parent_node_3d().find_child("Combat3D");
+var ironsights: bool = false: get: return get_ironsights();
 
-var ironsights: bool = false:
-	get:
-		return (view_model.ironsights_alpha > 0.8);
+func get_ironsights() -> bool:
+	return (view_model.ironsights_alpha > 0.8);
 
 func _mash(key: String) -> String:
 	return "@" + name + "@@" + String.num(hash(self)) + "@&" + key; 
