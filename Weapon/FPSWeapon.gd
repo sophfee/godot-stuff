@@ -14,16 +14,18 @@ extends Node3D
 
 @export_category("Weapon")
 @export var weapon: WeaponInfo;
+@export var owner: Player;
 
 var animator: AnimationPlayer;
 var camera: Camera3D;
-var ironsights: bool = false: get: return get_ironsights();
 var magazine: int = 0;
 var trigger_released: bool = false;
 var current_delay: float = 0;
 var primary_fire_stream: AudioStreamPlayer3D;
 var primary_empty_stream: AudioStreamPlayer3D;
 var draw_stream: AudioStreamPlayer3D;
+var ironsights: bool = false: get: return get_ironsights();
+var can_reload: bool = false: get: return get_can_reload();
 
 @onready var damage: float = weapon.damage;
 @onready var base_recoil: float = weapon.recoil_additive;
@@ -41,8 +43,6 @@ var draw_stream: AudioStreamPlayer3D;
 @onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
 @onready var combat_object: Combat3D = get_parent_node_3d();
 
-func get_ironsights() -> bool:
-	return (view_model.ironsights_alpha > 0.8);
 
 func _mash(key: String) -> String:
 	return "@" + name + "@@" + String.num(hash(self)) + "@&" + key; 
@@ -62,13 +62,13 @@ func _ready():
 	# Primary Fire
 	primary_fire_stream = AudioStreamPlayer3D.new();
 	primary_fire_stream.stream = primary_fire;
-	primary_fire_stream.name = _mash("PRIMARYFIRESFX");
+	primary_fire_stream.name = "Stream@PrimaryFire";
 	bone_attach.add_child(primary_fire_stream);
 	
 	# Primary Empty
 	primary_empty_stream = AudioStreamPlayer3D.new();
 	primary_empty_stream.stream = primary_empty;
-	primary_empty_stream.name = _mash("PRIMARYEMPTYSFX");
+	primary_empty_stream.name = "Stream@PrimaryEmpty";
 	bone_attach.add_child(primary_empty_stream);
 	
 
@@ -167,5 +167,36 @@ func _physics_process(delta):
 func _process(delta):
 	pass
 
-func _reload():
+func get_ironsights() -> bool:
+	return (view_model.ironsights_alpha > 0.8);
+
+func get_can_reload():
+	var r: int = owner.get_ammo(ammo_type);
+	var n: int = (magazine_size - magazine);
+
+	# Max
+	if (n == 0):
+		return false;
+
+	# Min
+	if (r <= 0):
+		return false;
 	
+	return true;
+
+func reload():
+	assert(ammo_type);
+
+	if (!can_reload):
+		return false;
+	
+	var r: int = owner.get_ammo(ammo_type);
+	var n: int = (magazine_size - magazine);
+	var x: int = (r - n);
+
+	if (x < 0):
+		magazine += r;
+		owner.set_ammo(ammo_type, 0);
+	else:
+		magazine += n;
+		owner.take_ammo(ammo_type, x);

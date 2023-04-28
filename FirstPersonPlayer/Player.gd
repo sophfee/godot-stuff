@@ -93,6 +93,9 @@ func give_ammo(ammo: AmmoType, amount: int) -> void:
 	else:
 		ammunition.set(ammo.display_name, current + amount);
 
+func take_ammo(ammo: AmmoType, amount: int) -> void:
+	give_ammo(ammo, -amount);
+
 func set_ammo(ammo: AmmoType, amount: int) -> void:
 	ammunition.set(ammo.display_name, amount);
 
