@@ -42,6 +42,11 @@ var mv: float = 0;
 var xmv: float = 0;
 var delta_x: float = 0
 var delta_y: float = 0
+var _punch_pos: Vector3 = Vector3(0, 0, 0);
+var _punch_ang: Vector3 = Vector3(0, 0, 0);
+
+var _wallproximity: float = 0.0;
+var _against_wall: bool = false;
 
 func _ready():
 	pass
@@ -55,9 +60,6 @@ func walk_bob(md: float) -> Vector3:
 	pos.z += a * 6;
 	
 	return pos;
-
-var _punch_pos: Vector3 = Vector3(0, 0, 0);
-var _punch_ang: Vector3 = Vector3(0, 0, 0);
 
 func punch(pos: Vector3, ang: Vector3) -> void:
 	_punch_pos += pos;
@@ -78,8 +80,6 @@ func _calculate_ironsights(delta: float) -> void:
 	_punch_ang = _punch_ang.lerp(Vector3.ZERO, delta * 16);
 	camera.fov = lerpf(90, 60, ironsights_alpha);
 
-var _wallproximity: float = 0.0;
-var _against_wall: bool = false;
 @warning_ignore("unused_parameter")
 func _calculate_wallproximity(delta: float) -> void:
 	var view_port: Viewport = get_viewport();
