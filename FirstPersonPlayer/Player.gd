@@ -9,7 +9,7 @@
 # Copyright (c) 2023 - Nick S.
 # Source: https://github.com/urnotnick/godot-stuff (Link to specific file if applicable)
 
-class_name Player
+class_name PlayerNode
 extends CharacterBody3D
 
 const SPEED: float = 5.0
@@ -24,11 +24,13 @@ var footstep_stream: AudioStreamPlayer3D;
 var footstep_timer: float = 0;
 var footstep_lastfoot: bool = false;
 var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity");
-var lateral_velocity: float: get: return get_lateral_velocity();
-var ammunition: Dictionary = Dictionary.new();
-var _target_motion: Vector3;
+var lateral_velocity: float:
+	get: return get_lateral_velocity();
+var ammunition: Dictionary = {};
+var target_motion: Vector3;
 
-var grounded: bool: get: return is_on_floor();
+var grounded: bool:
+	get: return is_on_floor();
 
 func _ready():
 	# check
@@ -52,7 +54,6 @@ func get_lateral_velocity() -> float:
 	return abs(target_motion.x + target_motion.z)
 
 func _input(event):
-	assert(controller);
 	
 	if (event is InputEventMouseMotion):
 		rotate_y( -(event.relative.x / 1250) );
@@ -71,7 +72,7 @@ func _process(delta):
 		if (footstep_timer >= footstep_interval):
 			footstep_timer = 0
 			footstep_lastfoot = !footstep_lastfoot;
-			footstep(footstep_lastfoot, controller.lateral_velocity);
+			footstep(footstep_lastfoot, lateral_velocity);
 
 	var input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
@@ -89,15 +90,15 @@ func _process(delta):
 func give_ammo(ammo: AmmoType, amount: int) -> void:
 	var current: int = ammunition.get(ammo.display_name, null);
 	if (!current):
-		ammunition.set(ammo.display_name, amount);
+		ammunition[ammo.display_name] = amount;
 	else:
-		ammunition.set(ammo.display_name, current + amount);
+		ammunition[ammo.display_name] = current + amount;
 
 func take_ammo(ammo: AmmoType, amount: int) -> void:
 	give_ammo(ammo, -amount);
 
 func set_ammo(ammo: AmmoType, amount: int) -> void:
-	ammunition.set(ammo.display_name, amount);
+	ammunition[ammo.display_name] = amount;
 
 func get_ammo(ammo: AmmoType) -> int:
 	var current: int = ammunition.get(ammo, null);

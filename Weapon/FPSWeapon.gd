@@ -14,7 +14,8 @@ extends Node3D
 
 @export_category("Weapon")
 @export var weapon: WeaponInfo;
-@export var owner: Player;
+@export var _owner: PlayerNode;
+@export var combat_object: Combat3D;
 
 var animator: AnimationPlayer;
 var camera: Camera3D;
@@ -24,14 +25,14 @@ var current_delay: float = 0;
 var primary_fire_stream: AudioStreamPlayer3D;
 var primary_empty_stream: AudioStreamPlayer3D;
 var draw_stream: AudioStreamPlayer3D;
-var ironsights: bool = false: get: return get_ironsights();
-var can_reload: bool = false: get: return get_can_reload();
+var ironsights: bool = false:
+	get: return get_ironsights();
 
 @onready var damage: float = weapon.damage;
 @onready var base_recoil: float = weapon.recoil_additive;
 @onready var rounds_per_minute: float = weapon.rounds_per_minute;
 @onready var automatic: bool = weapon.automatic;
-@onready var primary_fire: AudioStream = weapon.primary_attack;
+@onready var primary_fire: AudioStream = weapon.primary_fire;
 @onready var primary_empty: AudioStream = weapon.primary_empty;
 @onready var draw: AudioStream = weapon.draw;
 @onready var holster: AudioStream = weapon.holster;
@@ -41,7 +42,6 @@ var can_reload: bool = false: get: return get_can_reload();
 @onready var view_model: ViewModel = weapon.view_model;
 @onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
 @onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
-@onready var combat_object: Combat3D = get_parent_node_3d();
 
 
 func _mash(key: String) -> String:
@@ -51,7 +51,7 @@ func _ready():
 	# Assertions // Validation
 	assert(primary_fire);
 	assert(primary_empty);
-	assert(view_model);
+	#assert(view_model);
 	assert(combat_object);
 	assert(muzzle_particle);
 	
@@ -91,7 +91,7 @@ func primary_attack_sound() -> void:
 	assert(primary_fire_stream);
 	primary_fire_stream.play(0.0);
 	
-var bullet_hole_scene: Node = preload("res://private-shared/cago/decals/BulletHole.tscn").instantiate();
+
 
 func can_primary_attack() -> bool:
 	
@@ -121,22 +121,6 @@ func fire_bullet(ray_caster: RayCast3D) -> void:
 			(ray_caster.to_global(Vector3.ZERO) - ray_caster.get_collision_point()).normalized() * -.8,
 			ray_caster.get_collision_point() - ray_caster.get_collider().position
 		);
-
-func __fire_bullet(ray_caster: RayCast3D):
-	var hit: bool = ray_caster.get_collider() != null;
-	
-	if (hit):
-		
-		var rt: Node = find_parent("BasePlate");
-		assert(rt != null, "Failed to find main.");
-		
-		var bullet_hole: Node3D = bullet_hole_scene.duplicate();
-		assert(bullet_hole != null, "Failed to create bullet hole.");
-		rt.add_child(bullet_hole);
-		
-		bullet_hole.position = ray_caster.get_collision_point();
-		bullet_hole.rotation = ray_caster.get_collision_normal();
-		bullet_hole.rotation += (Vector3Extension.up(bullet_hole) * randf_range(0, 90));
 
 func muzzle_flash() -> void:
 	muzzle_particle.emit();
@@ -170,9 +154,9 @@ func _process(delta):
 func get_ironsights() -> bool:
 	return (view_model.ironsights_alpha > 0.8);
 
-func get_can_reload():
-	var r: int = owner.get_ammo(ammo_type);
-	var n: int = (magazine_size - magazine);
+func can_reload():
+	var r: int = _owner.get_ammo(weapon.ammo_type);
+	var n: int = (weapon.magazine_size - magazine);
 
 	# Max
 	if (n == 0):
@@ -184,19 +168,19 @@ func get_can_reload():
 	
 	return true;
 
-func reload():
-	assert(ammo_type);
+func _reload():
+	assert(weapon.ammo_type);
 
-	if (!can_reload):
+	if (!can_reload()):
 		return false;
 	
-	var r: int = owner.get_ammo(ammo_type);
-	var n: int = (magazine_size - magazine);
+	var r: int = owner.get_ammo(weapon.ammo_type);
+	var n: int = (weapon.magazine_size - magazine);
 	var x: int = (r - n);
 
 	if (x < 0):
 		magazine += r;
-		owner.set_ammo(ammo_type, 0);
+		_owner.set_ammo(weapon.ammo_type, 0);
 	else:
 		magazine += n;
-		owner.take_ammo(ammo_type, x);
+		_owner.take_ammo(weapon.ammo_type, x);

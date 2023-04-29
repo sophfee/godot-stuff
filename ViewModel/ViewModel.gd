@@ -32,7 +32,7 @@ extends Node3D
 @onready var sway_y_pitch_multiplier: float = viewmodel.sway_y_pitch_multiplier;
 @onready var ironsights_sway_multiplier: float = viewmodel.ironsights_sway_multiplier;
 @onready var camera: Camera3D = $"../FirstPersonCamera";
-@onready var pawn: Player = get_parent();
+@onready var pawn: PlayerNode = get_parent();
 @onready var view_model: Node3D = get_child(0);
 
 var curtime: float = 0;
