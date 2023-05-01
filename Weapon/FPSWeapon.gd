@@ -25,12 +25,12 @@ var current_delay: float = 0;
 var primary_fire_stream: AudioStreamPlayer3D;
 var primary_empty_stream: AudioStreamPlayer3D;
 var draw_stream: AudioStreamPlayer3D;
+var animation_tree: AnimationTree;
+var animgraph: AnimationNode;
 var ironsights: bool = false:
 	get: return get_ironsights();
 
 @onready var animator: AnimationPlayer = find_child("AnimationPlayer");
-var animation_tree: AnimationTree;
-var animgraph: AnimationNode;
 @onready var damage: float = weapon.damage;
 @onready var base_recoil: float = weapon.recoil_additive;
 @onready var rounds_per_minute: float = weapon.rounds_per_minute;
@@ -53,11 +53,11 @@ func _mash(key: String) -> String:
 
 func _ready():
 	# Assertions // Validation
-	assert(primary_fire);
-	assert(primary_empty);
-	assert(animator);
-	assert(combat_object);
-	assert(muzzle_particle);
+	assert(primary_fire, "No primary fire sound effect associated, cannot load!");
+	assert(primary_empty, "No empty sound effect associated, cannot load!");
+	assert(animator, "No AnimationPlayer associated, cannot load!");
+	assert(combat_object, "No Combat3D linked, cannot load!");
+	assert(muzzle_particle, "No Muzzle Particle located, cannot load!");
 	
 	# Bone Attachment
 	var bone_attach: Node3D = find_child("BoneAttachment3D");
