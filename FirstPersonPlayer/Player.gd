@@ -12,9 +12,12 @@
 class_name PlayerNode
 extends CharacterBody3D
 
-const SPEED: float = 5.0
 const JUMP_VELOCITY: float = 4.5
 const ACCELERATION: float = 10
+
+@export_category("Speed")
+@export var walk_speed: float = 5.0;
+@export var run_speed: float = 10.0;
 
 @export_category("Footsteps")
 @export var footstep_sfx: AudioStream;
@@ -28,6 +31,17 @@ var lateral_velocity: float:
 	get: return get_lateral_velocity();
 var ammunition: Dictionary = {};
 var target_motion: Vector3;
+var speed: float = 5.0; # The targetted speed of the player.
+var _sprinting: bool = false; # Whether or not the player is sprinting.
+var sprinting: bool = false:
+	# Parser throws error with static typing here
+	set(value):
+		_sprinting = value;
+		if (value):
+			speed = run_speed;
+		else:
+			speed = walk_speed;
+	get: return _sprinting;
 
 var grounded: bool:
 	get: return is_on_floor();
@@ -68,6 +82,9 @@ func footstep(is_left_foot: bool, _character_velocity: float) -> void:
 		footstep_stream.play();
 
 func _process(delta):
+	if (Input.is_action_just_pressed("sprint")):
+		sprinting = !sprinting;
+
 	if (abs(lateral_velocity) > 1):
 		footstep_timer += delta
 	
@@ -78,8 +95,8 @@ func _process(delta):
 
 	var input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-	target_motion.x = lerpf(target_motion.x, direction.x * SPEED, delta * ACCELERATION )
-	target_motion.z = lerpf(target_motion.z, direction.z * SPEED, delta * ACCELERATION )
+	target_motion.x = lerpf(target_motion.x, direction.x * speed, delta * ACCELERATION )
+	target_motion.z = lerpf(target_motion.z, direction.z * speed, delta * ACCELERATION )
 	
 	velocity = target_motion
 

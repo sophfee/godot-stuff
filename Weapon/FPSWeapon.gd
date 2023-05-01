@@ -60,7 +60,7 @@ func _ready():
 	assert(muzzle_particle);
 	
 	# Bone Attachment
-	var bone_attach: BoneAttachment3D = find_child("BoneAttachment3D");
+	var bone_attach: Node3D = find_child("BoneAttachment3D");
 	assert(bone_attach, "You need a BoneAttachment3D connected to your guns muzzle. Keep the name \"BoneAttachment3D\"");
 	
 	# Primary Fire
@@ -86,7 +86,7 @@ func primary_attack() -> void:
 		);
 	else:
 		view_model.punch(
-			Vector3(0, 0, 0),
+			Vector3(0, -.004, .06),
 			Vector3(0,  0, randf_range(-0.1, 0.1))
 		);
 		#animation_tree.set("parameters/StateMachine/is_fire", true);
@@ -136,8 +136,7 @@ func fire_bullet(ray_caster: RayCast3D) -> void:
 			combat_object, 
 			damage, 
 			ray_caster.get_collision_normal(), 
-			(ray_caster.to_global(Vector3.ZERO) - ray_caster.get_collision_point()).normalized() * -.8,
-			ray_caster.get_collision_point() - ray_caster.get_collider().position
+			(ray_caster.to_global(Vector3.ZERO) - ray_caster.get_collision_point()).normalized() * -.8
 		);
 
 func muzzle_flash() -> void:

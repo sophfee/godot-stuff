@@ -19,11 +19,17 @@ extends Node3D
 @onready var ironsights_offset_rotation: Vector3 = viewmodel.ironsights_offset_rotation;
 @onready var base_offset_position: Vector3 = viewmodel.base_offset_position;
 @onready var base_offset_rotation: Vector3 = viewmodel.base_offset_rotation;
+@onready var sprint_offset_position: Vector3 = viewmodel.sprint_offset_position;
+@onready var sprint_offset_rotation: Vector3 = Vector3(
+	deg_to_rad(viewmodel.sprint_offset_rotation.x),
+	deg_to_rad(viewmodel.sprint_offset_rotation.y),
+	deg_to_rad(viewmodel.sprint_offset_rotation.z)
+);
 @onready var bob_right: float = viewmodel.bob_right;
 @onready var bob_right_rate: float = viewmodel.bob_right_rate;
 @onready var bob_up: float = viewmodel.bob_up;
 @onready var bob_up_rate: float = viewmodel.bob_up_rate;
-@onready var walking_offset_position: Vector3 = viewmodel.
+@onready var walking_offset_position: Vector3 = viewmodel.walking_offset;
 @onready var sway_x_multiplier: float = viewmodel.sway_x_multiplier;
 @onready var sway_x_yaw_multiplier: float = viewmodel.sway_x_yaw_multiplier;
 @onready var sway_x_roll_multiplier: float = viewmodel.sway_x_roll_multiplier;
@@ -44,7 +50,8 @@ var delta_x: float = 0
 var delta_y: float = 0
 var _punch_pos: Vector3 = Vector3(0, 0, 0);
 var _punch_ang: Vector3 = Vector3(0, 0, 0);
-
+var _sprint_pos: Vector3 = Vector3(0, 0, 0);
+var _sprint_ang: Vector3 = Vector3(0, 0, 0);
 var _wallproximity: float = 0.0;
 var _against_wall: bool = false;
 
@@ -55,9 +62,10 @@ func walk_bob(md: float) -> Vector3:
 	var a: float = md * lerpf(1, ironsights_sway_multiplier, ironsights_alpha);
 	var pos: Vector3 = Vector3(0, 0, 0);
 	
-	pos.x += sin(curtime * bob_right_rate) * (a * bob_right) + (a * 1.9);
-	pos.y -= cos(curtime * bob_up_rate) * (a * bob_up) + (a * 1.32);
-	pos.z += a * 6;
+	pos.x += sin(curtime * bob_right_rate) * (a * bob_right);
+	pos.y -= cos(curtime * bob_up_rate) * (a * bob_up);
+	
+	pos += (walking_offset_position * a);
 	
 	return pos;
 
@@ -101,6 +109,11 @@ func _calculate_wallproximity(delta: float) -> void:
 @warning_ignore("unused_parameter")
 func _physics_process(delta):
 	pass #_calculate_wallproximity(delta);
+
+## This takes the given position in a local space and converts it to the camera's space.
+## Useful for calculating the position of the viewmodel.
+func to_camera_space(pos: Vector3) -> Vector3:
+	return camera.transform.basis * pos;
 
 func _process(delta: float):
 	curtime += delta;
@@ -151,7 +164,16 @@ func _process(delta: float):
 	
 	#position += (camera.transform.basis * Vector3(0,0,_wallproximity));
 	
+	if (pawn._sprinting):
+		_sprint_pos = _sprint_pos.lerp(sprint_offset_position, delta * 10);
+		_sprint_ang = _sprint_ang.lerp(sprint_offset_rotation, delta * 10);
+		
+	else:
+		_sprint_pos = _sprint_pos.lerp(Vector3(0, 0, 0), delta * 10);
+		_sprint_ang = _sprint_ang.lerp(Vector3(0, 0, 0), delta * 10);
+
+	position += (camera.transform.basis * _sprint_pos);
+	rotation += (camera.transform.basis * _sprint_ang);
 	_calculate_ironsights(delta);
-	#rotation += Vector3(0,0,-2 * ironsights_alpha);
 	
 	position += walk_bob(fd)

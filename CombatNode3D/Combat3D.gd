@@ -12,7 +12,6 @@
 class_name Combat3D
 extends Node3D
 
-@onready var _owner = get_parent_node_3d();
 @export var starting_health: float = 100;
 @export var maximum_health: float = 100;
 
@@ -35,7 +34,7 @@ func _scale_damage(attacker: Combat3D, damage: float, normal: Vector3, force: Ve
 	return 1.0;
 
 # This has to be called within _process_physics, otherwise you get bad results.
-func inflict_damage(attacker: Combat3D, damage: float, normal: Vector3, force: Vector3, pos: Vector3) -> void:
+func inflict_damage(attacker: Combat3D, damage: float, normal: Vector3, force: Vector3) -> void:
 	get_parent_node_3d().apply_impulse(force);
 	damage = _scale_damage(attacker, damage, normal, force);
 	_health -= damage;
