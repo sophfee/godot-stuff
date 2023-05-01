@@ -79,3 +79,7 @@ extends Resource
 @export var entering_ironsight: AudioStream;
 @export var exiting_ironsight: AudioStream;
 @export var reload: AudioStream;
+
+@export_category("Animation")
+@export var animation_idle: String = "firstperson_idle";
+@export var animation_fire: String = "firstperson_shoot01";

@@ -16,10 +16,10 @@ extends Node3D
 @export var weapon: WeaponInfo;
 @export var _owner: PlayerNode;
 @export var combat_object: Combat3D;
+@export var view_model: ViewModel;
 
-var animator: AnimationPlayer;
 var camera: Camera3D;
-var magazine: int = 0;
+var magazine: int = 30;
 var trigger_released: bool = false;
 var current_delay: float = 0;
 var primary_fire_stream: AudioStreamPlayer3D;
@@ -28,6 +28,9 @@ var draw_stream: AudioStreamPlayer3D;
 var ironsights: bool = false:
 	get: return get_ironsights();
 
+@onready var animator: AnimationPlayer = find_child("AnimationPlayer");
+var animation_tree: AnimationTree;
+var animgraph: AnimationNode;
 @onready var damage: float = weapon.damage;
 @onready var base_recoil: float = weapon.recoil_additive;
 @onready var rounds_per_minute: float = weapon.rounds_per_minute;
@@ -39,10 +42,11 @@ var ironsights: bool = false:
 @onready var entering_ironsight: AudioStream = weapon.entering_ironsight;
 @onready var exiting_ironsight: AudioStream = weapon.exiting_ironsight;
 @onready var reload: AudioStream = weapon.reload;
-@onready var view_model: ViewModel = weapon.view_model;
 @onready var muzzle_flash_light: OmniLight3D = find_child("Flash", true);
 @onready var muzzle_particle: MuzzleEffect = find_child("Particle", true);
-
+@onready var idle_anim: String = weapon.animation_idle;
+@onready var fire_anim: String = weapon.animation_fire;
+@onready var ray_cast: RayCast3D = find_child("MuzzleRayCast");
 
 func _mash(key: String) -> String:
 	return "@" + name + "@@" + String.num(hash(self)) + "@&" + key; 
@@ -51,7 +55,7 @@ func _ready():
 	# Assertions // Validation
 	assert(primary_fire);
 	assert(primary_empty);
-	#assert(view_model);
+	assert(animator);
 	assert(combat_object);
 	assert(muzzle_particle);
 	
@@ -73,14 +77,29 @@ func _ready():
 	
 
 func primary_attack() -> void:
-	pass;
+	muzzle_flash();
+	if (ironsights):
+		var roll_p: float = randf_range(-0.03, 0.03);
+		view_model.punch(
+			Vector3(roll_p * .1,-.01, .04),
+			Vector3(.03,  0, roll_p)
+		);
+	else:
+		view_model.punch(
+			Vector3(0, 0, 0),
+			Vector3(0,  0, randf_range(-0.1, 0.1))
+		);
+		#animation_tree.set("parameters/StateMachine/is_fire", true);
 	
+	primary_attack_sound();
+	view_punch(Vector3(.01, 0, 0));
+	
+	fire_bullet(ray_cast);
+
 func view_punch(punch: Vector3) -> void:
 	
 	# Ensure we have a camera.
-	assert(camera, "You do not have your camera identified.");
-	
-	camera.rotation += (camera.transform.basis * punch);
+	_owner.camera.rotation += (_owner.camera.transform.basis * punch);
 
 func play_anim(anim_name: String) -> void:
 	assert(animator, "You do not have a linked animator.");
@@ -112,7 +131,6 @@ func fire_bullet(ray_caster: RayCast3D) -> void:
 		if (obj == null):
 			return;
 		assert(combat_object);
-		
 		
 		obj.inflict_damage(
 			combat_object, 
@@ -148,8 +166,19 @@ func _physics_process(delta):
 			trigger_released = true;
 
 @warning_ignore("unused_parameter")
-func _process(delta):
-	pass
+func _process(delta: float):
+	if (animation_tree):
+		animation_tree.advance(delta);
+	if (animgraph):
+		if (current_delay == 0):
+			var auto_is_fire = animation_tree.get("parameters/StateMachine/is_fire");
+			if (auto_is_fire == null):
+				return;
+			
+			if (auto_is_fire == false):
+				return;
+			
+			animation_tree.set("parameters/StateMachine/is_fire", false);
 
 func get_ironsights() -> bool:
 	return (view_model.ironsights_alpha > 0.8);

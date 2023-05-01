@@ -44,6 +44,7 @@ func _ready():
 	camera.fov = 75;
 	camera.name = "@FirstPersonCamera";
 	add_child(camera);
+	camera.make_current();
 
 	footstep_stream = AudioStreamPlayer3D.new();
 	footstep_stream.stream = footstep_sfx;
@@ -58,6 +59,7 @@ func _input(event):
 	if (event is InputEventMouseMotion):
 		rotate_y( -(event.relative.x / 1250) );
 		camera.rotate_x( -(event.relative.y / 1250) );
+		camera.rotation.x = clampf(camera.rotation.x, deg_to_rad(-89), deg_to_rad(89));
 
 func footstep(is_left_foot: bool, _character_velocity: float) -> void:
 	if (is_left_foot):

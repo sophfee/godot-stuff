@@ -23,6 +23,7 @@ extends Node3D
 @onready var bob_right_rate: float = viewmodel.bob_right_rate;
 @onready var bob_up: float = viewmodel.bob_up;
 @onready var bob_up_rate: float = viewmodel.bob_up_rate;
+@onready var walking_offset_position: Vector3 = viewmodel.
 @onready var sway_x_multiplier: float = viewmodel.sway_x_multiplier;
 @onready var sway_x_yaw_multiplier: float = viewmodel.sway_x_yaw_multiplier;
 @onready var sway_x_roll_multiplier: float = viewmodel.sway_x_roll_multiplier;
@@ -31,8 +32,8 @@ extends Node3D
 @onready var sway_y_position_multiplier: float = viewmodel.sway_y_position_multiplier;
 @onready var sway_y_pitch_multiplier: float = viewmodel.sway_y_pitch_multiplier;
 @onready var ironsights_sway_multiplier: float = viewmodel.ironsights_sway_multiplier;
-@onready var camera: Camera3D = $"../FirstPersonCamera";
 @onready var pawn: PlayerNode = get_parent();
+@onready var camera: Camera3D = pawn.camera;
 @onready var view_model: Node3D = get_child(0);
 
 var curtime: float = 0;
@@ -87,6 +88,7 @@ func _calculate_wallproximity(delta: float) -> void:
 	var hit_pos: Vector3 = camera.project_position(scr_size /2, 4);
 	var dist_sqr: float = position.distance_squared_to(hit_pos);
 	var x: bool = dist_sqr < (5 ^ 2);
+	
 	if (x):
 		_wallproximity = dist_sqr / (5 ^ 2);
 	else:
@@ -102,6 +104,10 @@ func _physics_process(delta):
 
 func _process(delta: float):
 	curtime += delta;
+	
+	if (!camera):
+		camera = pawn.camera;
+		return
 	
 	if (Input.is_action_pressed("iron_sights")):
 		ironsights_alpha = lerpf(ironsights_alpha, 1, delta * 10);
